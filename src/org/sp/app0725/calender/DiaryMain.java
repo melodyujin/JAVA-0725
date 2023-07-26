@@ -16,7 +16,7 @@ import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
-import org.sp.app0725.util.StringManager;
+import util.StringManager;
 
 //다이어리 만들기
 public class DiaryMain extends JFrame{
@@ -40,6 +40,9 @@ public class DiaryMain extends JFrame{
 	
 	//날짜 셀
 	NumCell[][] numCells=new NumCell[6][7];
+	
+	//팝업창
+	Popup popup;
 	
 	public DiaryMain() {
 		//UI 생성하기
@@ -93,13 +96,17 @@ public class DiaryMain extends JFrame{
 		add(p_center);
 		add(p_east, BorderLayout.EAST);
 		
-		createCell();
-		printTitle();
+		createCell(); //달력에 사용될 셀 생성하기
+		printTitle(); //달력 제목 출력
+		printNum();
 		
 		setSize(1100, 850);
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
+		
+		//팝업창 생성 및 부착
+		popup = new Popup();
 		
 		//버튼과 리스너 연결
 		//내부익명클래스마저도 더욱 줄여서 코드 작성하고 싶다면?
@@ -129,7 +136,7 @@ public class DiaryMain extends JFrame{
 		//날짜 셀 만들기
 		for(int a=0;a<6;a++) { //6층
 			for(int i=0;i<7;i++) { //7호수
-				NumCell cell= new NumCell(Color.WHITE, 100, 100);
+				NumCell cell= new NumCell(this, Color.WHITE, 100, 100);
 				cell.setTitle("0");
 				//한층에 소속된 호수들을 배열에 채우기
 				numCells[a][i]=cell;
@@ -165,15 +172,35 @@ public class DiaryMain extends JFrame{
 	}
 	
 	//해당 월의 시작 요일 구하기
-	public void getStartDayOfWeek() {
+	public int getStartDayOfWeek() {
 		//날짜 객체 하나를 해당월의 조작해서, 그 날이 무슨 요일인지 구하자
 		Calendar c = Calendar.getInstance(); //조작용 객체 (망가져도 상관없음)
-		int mm=cal.get(Calendar.MONTH);
 		
-		c.set(mm, 1);
+		int yy=cal.get(Calendar.YEAR); //현재 보고있는 연도
+		int mm=cal.get(Calendar.MONTH); //현재 보고있는 월
+		
+		c.set(yy, mm, 1); //날짜 객체를 1일로 조작
+		
 		int day=c.get(Calendar.DAY_OF_WEEK); //1일의 요일 구하기
 
 		System.out.println(day);
+		return day; //요일 반환
+	}
+	
+	//해당 월이 몇일까지 있는지
+	public int getLastDateOfMonth() {
+		//현재 보고 있는 월의 다음월 및 0일로 조작을 가한 후,
+		//몇일인지 물어보자
+		
+		int yy=cal.get(Calendar.YEAR);
+		int mm=cal.get(Calendar.MONTH);
+		
+		//조작을 가해보자
+		Calendar c = Calendar.getInstance();
+		c.set(yy, mm+1, 0);
+		int dd=c.get(Calendar.DATE);
+		
+		return dd;
 	}
 	
 	//날짜 숫자 출력처리
@@ -182,11 +209,31 @@ public class DiaryMain extends JFrame{
 		for(int a=0;a<numCells.length;a++) { //층수
 			for(int i=0;i<numCells[a].length;i++) {
 				numCells[a][i].setTitle("");
+				
+				//아이콘 삭제하기
+				numCells[a][i].iconBox.removeAll();
 			}
 		}
 		
+		int startDay=getStartDayOfWeek(); //해당 월이 무슨 요일부터 시작하는지 그 값을 얻기
+		int lastDate=getLastDateOfMonth(); //해당 월이 몇일까지 있는지 그 값을 얻기
+		
+		System.out.println(lastDate+"까지에요");
+		
 		//각셀에 알맞는 숫자 채우기
-		getStartDayOfWeek();
+		int count=0;
+		int num=0;
+		
+		for(int a=0;a<numCells.length;a++) {
+			for(int i=0;i<numCells[a].length;i++) {
+				count++;
+				if(count>=startDay && num<lastDate) {
+					num++;
+					numCells[a][i].setTitle(Integer.toString(num));
+				}
+				
+			}
+		}
 	}
 	
 	

@@ -1,4 +1,4 @@
-package org.sp.app0725.util;
+package util;
 
 public class StringManager {
 	
